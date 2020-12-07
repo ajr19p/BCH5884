@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Final Project 2</title>
+</head>
+
+<body><H1 style="background:#220DFB">Enhancing Performance of Electrochemical, Aptamer-Based Sensors</H1>
+<H2> Project Proposal</H2>
+<p>One of my current research project goals is to develop an electrochemical aptamer-based (E-AB) sensor on the microscale with a Au nanoparticle modified surface for detection of ATP using square voltammetry (SWV) analysis. Au ultramicroelectrodes (UMEs) have advantages of improved spatiotemporal resolution, fast mass transfer, low ohmic drops, and smaller RC constants. However, the current limitation is the small current output. The addition of the Au modification on the UME surface would aid in increasing S/N and sensitivity. For data analysis, it is crucial to have a consistent way to computationally account for the noisy baseline in the smaller current output SWVs. The data shown in Figure 1 on macroscale E-AB sensors has been efficiently manually integrated the baseline, but thus far manual integration has not provided consistent peak area values for E-AB sensors on the microscale. The need for baseline correction/subtraction has arisen from the noisy data seen in the SWV in Figure 1 and shown from the ATP signal change % integrated from SWV peak heights. </p>
+<img src="file:///C|/Users/amand/Figure 1.JPG" width="605" height="358" alt="ATP Titration"/>
+<H3>Figure 1. Square wave voltammograms of ATP concentrations ranging from 0 µm to 500 µM ATP in PBS using an E-AB sensor on the microscale. </H3>
+<table width="200" border="1">
+  <tbody>
+    <tr>
+      <td>ATP Conc (uM)</td>
+      <td>Signal Change %</td>
+    </tr>
+    <tr>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>0.1</td>
+      <td>-1.72</td>
+    </tr>
+    <tr>
+      <td>0.5</td>
+      <td>-0.10</td>
+    </tr>
+    <tr>
+      <td>1.0</td>
+      <td>-9.66</td>
+    </tr>
+    <tr>
+      <td>2.5</td>
+      <td>6.53</td>
+    </tr>
+    <tr>
+      <td>5.0</td>
+      <td>-6.44</td>
+    </tr>
+    <tr>
+      <td>7.5</td>
+      <td>-6.71</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>3.65</td>
+    </tr>
+    <tr>
+      <td>25</td>
+      <td>-1.66</td>
+    </tr>
+    <tr>
+      <td>50</td>
+      <td>-16.8</td>
+    </tr>
+    <tr>
+      <td>75</td>
+      <td>-10.5</td>
+    </tr>
+    <tr>
+      <td>250</td>
+      <td>-2.11</td>
+    </tr>
+    <tr>
+      <td>500</td>
+      <td>-0.10</td>
+    </tr>
+  </tbody>
+</table>
+<H3>Table 1. ATP signal change from titration.</H3>
+<H2> Summary of Python Code</H2>
+<H3> Import Libraries</H3>
+<p> import numpy as np</p>
+<p>import scipy</p>
+<p>import peakutils</p>
+<p>import matplotlib.pyplot as plt</p>
+<p>import sys</p>
+<p>if len(sys.argv)1:
+  filename = sys.argv[1]</p>
+<p>else:
+  filename = input("Enter the filename: ") </p>
+<H3> Plot Subtracted Baseline</H3>
+<p> # Load data
+  data = np.loadtxt(filename, delimiter=',')</p>
+<p>voltage = data[:, 0] # 0th column</p>
+<p>current = data[:, 1] # 1st column</p>
+<p># Plot original data</p>
+<p>plt.plot(voltage, current, c='#546C66', label='Original Plot')</p>
+<p># Estimate the baseline</p>
+<p>baseline_values = peakutils.baseline(current,2)</p>
+<p># Plot the baseline</p>
+<p>plt.plot(voltage, baseline_values, c='#EB55BF', label='Baseline')</p>
+<p># Subtract out the baseline</p>
+<p>#corrected = current - baseline_values</p>
+<p>#plt.plot(voltage, corrected, label='Baseline subtracted')</p>
+<H3>Find Peaks and Peak Maximum</H3>
+<p> #Find all peaks in this file, need to modify prominence and width for the specific data!!!!!!!!
+  peaks, peak_properties = find_peaks(current, prominence=(None, 0.6), width=5)</p>
+<p>plt.plot(voltage[peaks], current[peaks], 'x', c='C1', label="Peak")</p>
+<p>plt.vlines(x=voltage[peaks], ymin=current[peaks] - peak_properties["prominences"], ymax = current[peaks], color = "C1")</p>
+<p>l = peak_properties["left_ips"]</p>
+<p>r = peak_properties["right_ips"]</p>
+<p>plt.hlines(y=peak_properties["width_heights"], xmin=voltage[peak_properties["left_ips"].astype(int)], xmax=voltage[peak_properties["right_ips"].astype(int)], color = "C1")</p>
+<p>width = voltage[peak_properties["right_ips"].astype(int)] - voltage[peak_properties["left_ips"].astype(int)]</p>
+<p>height = current[peaks] - (current[peaks] - peak_properties["prominences"]</p>
+<p>for p in range(len(peaks)):
+  print("Peak found at:", voltage[peaks[p]])</p>
+<p>print("\tWidth: {}".format(width[p]))</p>
+<p>print("\tHeight: {}".format(height[p]))</p>
+<p>plt.title(filename)</p>
+<p>plt.xlabel('Voltage')</p>
+<p>plt.ylabel('Current')</p>
+<p>&nbsp;plt.legend()&nbsp;
+  <img src="file:///C|/Users/amand/out.png" width="1280" height="960" alt=""/>
+<h3> Figure 2. Substracted baseline plot of a SWV of an UME at 100 Hz.</h3>
+<H2> Finding Maximum Peak Height</H2>
+<p> from scipy.signal import find_peaks</p>
+<p>#Find all peaks in this file, need to modify prominence and width for the specific data!!!!!!!!</p>
+<p>peaks, peak_properties = find_peaks(current, prominence=(None, 0.6), width=5)</p>
+<p>plt.plot(voltage[peaks], current[peaks], 'x', c='C1', label="Peak")</p>
+<p>plt.vlines(x=voltage[peaks], ymin=current[peaks] - peak_properties["prominences"], ymax = current[peaks], color = "C1")</p>
+<p>l = peak_properties["left_ips"]</p>
+<p>r = peak_properties["right_ips"]</p>
+<p>plt.hlines(y=peak_properties["width_heights"],</p>
+<p>xmin=voltage[peak_properties["left_ips"].astype(int)],</p>
+<p>xmax=voltage[peak_properties["right_ips"].astype(int)], color = "C1")</p>
+<p>width = voltage[peak_properties["right_ips"].astype(int)] - voltage[peak_properties["left_ips"].astype(int)]</p>
+<p>height = current[peaks] - (current[peaks] - peak_properties["prominences"])</p>
+<p>for p in range(len(peaks)):</p>
+<p>print("Peak found at:", voltage[peaks[p]])</p>
+<p>print("\tWidth: {}".format(width[p]))</p>
+<p>print("\tHeight: {}".format(height[p]))</p>
+<div data_temp_dwid="0">plt.title(filename)
+  plt.xlabel('Voltage')
+  plt.ylabel('Current')
+  
+  plt.legend()
+  plt.savefig('out.png', dpi=200)
+  plt.show() </div>
+<img src="file:///C|/Users/amand/out1.png" width="1280" height="960" alt=""/>
+<H3> Figure 3. Plotted peak width and peak height of a UME SWV</H3>	
+<img src="file:///C|/Users/amand/Figure 4.JPG" width="617" height="858" alt=""/>
+<H3> Figure 4. Printed outputs of peak height. Peak height at -0.258 V is the methylene blue peak of the microscale E-AB sensor detecting ATP.</H3>
+<p> Overall, the code will provide consistent outputs of integrated peak height data compared to manual integration from the Labview program shown in Table 1. 
+</p>
+</body>
+</html>
+
+
